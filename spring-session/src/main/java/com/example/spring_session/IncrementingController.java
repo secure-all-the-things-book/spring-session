@@ -11,17 +11,17 @@ import java.util.Map;
 @ResponseBody
 class IncrementingController {
 
+	@GetMapping("/increment")
+	Map<String, Integer> increment(HttpSession session) {
+		// <.>
+		var existingValue = (Integer) session.getAttribute("count");
+		if (existingValue == null) {
+			session.setAttribute("count", 0);
+		}
+		var count = (Integer) session.getAttribute("count");
+		// <.>
+		session.setAttribute("count", count + 1);
+		return Map.of("count", count);
+	}
 
-    @GetMapping("/increment")
-    Map<String, Integer> increment(HttpSession session) {
-        // <.>
-        var existingValue = (Integer) session.getAttribute("count");
-        if (existingValue == null) {
-            session.setAttribute("count", 0);
-        }
-        var count = (Integer) session.getAttribute("count");
-        // <.>
-        session.setAttribute("count", count + 1);
-        return Map.of("count", count);
-    }
 }
