@@ -1,82 +1,75 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Authenticated Chat</title>
+
     <style>
-        /*body { font-family: sans-serif; margin: 2rem; }*/
-        /*#chat-box { width: 100%; max-width: 500px; height: 300px; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }*/
+        #chat {
+            display: grid;
+            gap: .5em;
+            justify-items: start;
+        }
+
+        #chat > #prompt,
+        #chat > #chat-box,
+        #chat > #messageInput {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #chat > button {
+            justify-self: start;
+        }
+
         #chat-box {
-            border: 1px solid black;
             padding: .5em;
+            border: 1px solid black;
             height: 10em;
             overflow-y: scroll;
         }
-
-        .sender {
-            font-weight: bold;
-        }
     </style>
-
-    <!-- Include SockJS and STOMP over WebSockets -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 </head>
 <body>
-
-<h2>WebSocket Chat</h2>
-<p>Logged in as: <strong th:text="${username}" id="username">User</strong></p>
-
-<div id="chat-box"></div>
-
-<input type="text" id="messageInput" placeholder="Type a message..." style="width: 300px;"/>
-<button onclick="sendMessage()">Send</button>
-
+<div id="chat">
+    <div id="prompt">
+        <h2>WebSocket Chat</h2>
+        <p>Logged in as: <strong th:text="${username}" id="username">User</strong></p>
+    </div>
+    <div id="chat-box"></div>
+    <input type="text" id="messageInput" placeholder="Type a message..."/>
+    <button onclick="send()">Send</button>
+</div>
 <script>
-    let stompClient = null;
-    const currentUsername = document.getElementById('username').innerText;
-
-    function connect() {
-        // <.>
-        const socket = new SockJS('/messages');
-        stompClient = Stomp.over(socket);
-
-        stompClient.connect({}, function (frame) {
-            console.log('Connected: ' + frame);
-
-            // <.>
-            stompClient.subscribe('/topic/public', function (messageOutput) {
-                const message = JSON.parse(messageOutput.body);
-                displayMessage(message.sender, message.content);
-            });
-
-        }, function (error) {
-            console.error('STOMP protocol error:', error);
-        });
+    function load(src) {
+        return new Promise(ok => {
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = ok;
+            document.head.appendChild(s);
+        })
     }
 
-    function sendMessage() {
-        const input = document.getElementById('messageInput');
-        const content = input.value.trim();
-        if (content && stompClient) {
-            const chatMessage = {content: content};
-            stompClient.send("/app/send", {}, JSON.stringify(chatMessage));
+    function startChat() {
+        const box = document.getElementById('chat-box'),
+            input = document.getElementById('messageInput');
+        const stomp = Stomp.over(new SockJS('/messages'));
+        stomp.connect({}, () => stomp.subscribe('/topic/public', m => {
+            const {sender, content} = JSON.parse(m.body);
+            box.insertAdjacentHTML('beforeend',
+                `<div><span class="sender">${sender}:</span> ${content}</div>`);
+            box.scrollTop = box.scrollHeight;
+        }));
+        window.send = () => {
+            const content = input.value.trim();
+            if (content) stomp.send('/app/send', {}, JSON.stringify({content}));
             input.value = '';
-        }
+        };
     }
-
-    function displayMessage(sender, content) {
-        const chatBox = document.getElementById('chat-box');
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message');
-
-        messageElement.innerHTML = `<span class="sender">${sender}:</span> ${content}`;
-        chatBox.appendChild(messageElement);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    document.addEventListener("DOMContentLoaded", connect);
+    const cdn = 'https://cdnjs.cloudflare.com/ajax/libs/';
+    const promises = ['sockjs-client/1.6.1/sockjs.min.js', 'stomp.js/2.3.3/stomp.min.js']
+        .map(src => load(cdn + src));
+    Promise.all(promises).then(startChat);
 </script>
-
 </body>
 </html>
