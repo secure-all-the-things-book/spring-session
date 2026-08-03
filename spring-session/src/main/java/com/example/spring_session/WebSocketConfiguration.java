@@ -9,9 +9,10 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
 @Configuration
 @EnableWebSocketMessageBroker
-class WebSocketConfiguration extends AbstractSessionWebSocketMessageBrokerConfigurer<Session> {
+class WebSocketConfiguration // <.>
+		extends AbstractSessionWebSocketMessageBrokerConfigurer<Session> {
 
-	// normally clients would override WebSocketMessageBrokerConfigurer
+	// <.>
 	@Override
 	public void configureStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/messages").withSockJS();
