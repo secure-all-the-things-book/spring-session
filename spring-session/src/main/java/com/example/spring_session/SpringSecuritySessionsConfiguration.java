@@ -9,13 +9,13 @@ import org.springframework.security.core.session.SessionRegistry;
 @Configuration
 class SpringSecuritySessionsConfiguration {
 
-    @Bean
-    Customizer<HttpSecurity> securitySessionsCustomizer(SessionRegistry sessionRegistry) {
-        return http -> http //
-                .sessionManagement(session -> session//
-                        .maximumSessions(2) // <.>
-                        .sessionRegistry(sessionRegistry) // <.>
-                ); //
-    }
+	@Bean
+	Customizer<HttpSecurity> securitySessionsCustomizer(SessionRegistry sessionRegistry) {
+		return http -> http //
+			.sessionManagement(session -> session//
+				.maximumSessions(2) // <.>
+				.sessionRegistry(sessionRegistry) // <.>
+			); //
+	}
 
 }
