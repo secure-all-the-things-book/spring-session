@@ -22,12 +22,17 @@ class SecurityConfiguration {
 	// <.>
 	@Bean
 	InMemoryUserDetailsManager userDetailsManager(PasswordEncoder pw) {
-		var build = User //
+		var josh = User //
 			.withUsername("josh@joshlong.com") //
 			.password(pw.encode("pw")) //
 			.roles("USER") //
 			.build();
-		return new InMemoryUserDetailsManager(build);
+		var rob = User //
+			.withUsername("rob@springsecurity.site") //
+			.password(pw.encode("pw"))//
+			.roles("USER", "ADMIN")//
+			.build();
+		return new InMemoryUserDetailsManager(rob, josh);
 	}
 
 	// <.>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Authenticated Chat</title>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; }
+        #chat-box { width: 100%; max-width: 500px; height: 300px; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+        .message { margin-bottom: 8px; }
+        .sender { font-weight: bold; color: #2b542c; }
+    </style>
+
+    <!-- Include SockJS and STOMP over WebSockets -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+
+<h2>WebSocket Chat</h2>
+<p>Logged in as: <strong th:text="${username}" id="username">User</strong></p>
+
+<div id="chat-box"></div>
+
+<input type="text" id="messageInput" placeholder="Type a message..." style="width: 300px;" />
+<button onclick="sendMessage()">Send</button>
+
+<script>
+    let stompClient = null;
+    const currentUsername = document.getElementById('username').innerText;
+
+    function connect() {
+        // 1. Connect to the SockJS endpoint defined in your WebSocketConfiguration
+        const socket = new SockJS('/messages');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+
+            // 2. Subscribe to public broadcast messages
+            stompClient.subscribe('/topic/public', function (messageOutput) {
+                const message = JSON.parse(messageOutput.body);
+                displayMessage(message.sender, message.content);
+            });
+
+            /*
+             * OPTIONAL: If you want to receive PRIVATE messages sent specifically to this user
+             * using SimpMessagingTemplate.convertAndSendToUser(username, "/queue/private", msg):
+             *
+             * stompClient.subscribe('/user/queue/private', function (messageOutput) { ... });
+             */
+        }, function (error) {
+            console.error('STOMP protocol error:', error);
+        });
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const content = input.value.trim();
+
+        if (content && stompClient) {
+            const chatMessage = {
+                content: content
+            };
+
+            // Send to application destination prefix /app + /send
+            stompClient.send("/app/send", {}, JSON.stringify(chatMessage));
+            input.value = '';
+        }
+    }
+
+    function displayMessage(sender, content) {
+        const chatBox = document.getElementById('chat-box');
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+
+        messageElement.innerHTML = `<span class="sender">${sender}:</span> ${content}`;
+        chatBox.appendChild(messageElement);
+
+        // Auto-scroll to bottom
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Connect automatically when the page loads
+    document.addEventListener("DOMContentLoaded", connect);
+</script>
+
+</body>
+</html>
