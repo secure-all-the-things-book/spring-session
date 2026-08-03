@@ -25,5 +25,5 @@ class ChatController {
 	ChatMessage send(@Payload ChatMessage message, Principal principal) {
 		return new ChatMessage(principal.getName(), message.content());
 	}
-}
 
+}

@@ -8,9 +8,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 @Configuration
 class ChatSecurityConfiguration {
 
-    @Bean
-    Customizer<HttpSecurity> chatHttpSecurityCustomizer() {
-        return http -> http.authorizeHttpRequests(a -> a.requestMatchers("/chat").authenticated());
-    }
+	@Bean
+	Customizer<HttpSecurity> chatHttpSecurityCustomizer() {
+		return http -> http.authorizeHttpRequests(a -> a.requestMatchers("/chat").authenticated());
+	}
 
 }
