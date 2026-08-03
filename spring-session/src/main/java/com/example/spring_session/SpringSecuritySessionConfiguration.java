@@ -9,6 +9,7 @@ import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 @Configuration
 class SpringSecuritySessionConfiguration {
 
+	// <.>
 	@Bean
 	<S extends Session> SpringSessionBackedSessionRegistry<S> sessionRegistry(
 			FindByIndexNameSessionRepository<S> sessionRepository) {
